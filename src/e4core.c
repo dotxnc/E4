@@ -1,9 +1,9 @@
 #include "e4core.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "dep/stb_image.h"
 #define GLAD_GL_IMPLEMENTATION
-#include "gl.h"
+#include "dep/gl.h"
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>

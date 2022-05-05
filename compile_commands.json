@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wno-void-pointer-to-int-cast",
+      "-c",
+      "-o",
+      "obj/./src/e4draw.c.o",
+      "src/e4draw.c"
+    ],
+    "directory": "/home/xnc/Projects/E4",
+    "file": "/home/xnc/Projects/E4/src/e4draw.c",
+    "output": "/home/xnc/Projects/E4/obj/src/e4draw.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wno-void-pointer-to-int-cast",
+      "-c",
+      "-o",
+      "obj/./src/main.c.o",
+      "src/main.c"
+    ],
+    "directory": "/home/xnc/Projects/E4",
+    "file": "/home/xnc/Projects/E4/src/main.c",
+    "output": "/home/xnc/Projects/E4/obj/src/main.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wno-void-pointer-to-int-cast",
+      "-c",
+      "-o",
+      "obj/./src/e4core.c.o",
+      "src/e4core.c"
+    ],
+    "directory": "/home/xnc/Projects/E4",
+    "file": "/home/xnc/Projects/E4/src/e4core.c",
+    "output": "/home/xnc/Projects/E4/obj/src/e4core.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wno-void-pointer-to-int-cast",
+      "-c",
+      "-o",
+      "obj/./src/bootstrap.c.o",
+      "src/bootstrap.c"
+    ],
+    "directory": "/home/xnc/Projects/E4",
+    "file": "/home/xnc/Projects/E4/src/bootstrap.c",
+    "output": "/home/xnc/Projects/E4/obj/src/bootstrap.c.o"
+  }
+]
