@@ -1,0 +1,4 @@
+bin/
+obj/
+res/out/
+.cache/
