@@ -77,7 +77,7 @@ void update(f32 dt)
 void draw(f32 dt)
 {
     e4core_clear(0x00, MAKE_COLOR(Color_Black, Color_Black));
-    e4draw_text("Hello, E4!", 0xf0, 15 + sin(bootstrap_time() * 2) * 8, 1);
+    e4draw_text("Hello, E4!", MAKE_COLOR(Color_Black, Color_Green), 15 + sin(bootstrap_time() * 2) * 8, 1);
 }
 
 void click(i32 x, i32 y, InputActionE action)

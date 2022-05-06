@@ -1,7 +1,7 @@
 #ifndef E4CORE_H
 #define E4CORE_H
 
-#include "util.h"
+#include "e4util.h"
 
 // Foreground, Background
 #define MAKE_COLOR(b, f) ((u8)((b << 4) | f))

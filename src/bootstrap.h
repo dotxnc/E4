@@ -16,7 +16,7 @@
  * - Key (i32 key, InputActionE action)
  */
 
-#include "util.h"
+#include "e4util.h"
 
 typedef enum InputActionE
 {
@@ -32,7 +32,6 @@ typedef enum InputModE
     InputMod_Control = 2,
     InputMod_Alt = 4,
     InputMod_Super = 8,
-
 } InputModE;
 
 typedef void (*BootstrapInitPtr)();

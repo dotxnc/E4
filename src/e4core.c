@@ -140,7 +140,6 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     // Set vertex attributes
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), NULL);
     glEnableVertexAttribArray(0);
-    // NOTE: Might need offsetof here instead of (void*)(2 * sizeof(f32))
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
     glEnableVertexAttribArray(1);
 
@@ -183,9 +182,18 @@ void e4core_clean()
 
 void e4core_render()
 {
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    glUseProgram(_shader);
+    glBindTexture(GL_TEXTURE_2D, _font);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, _ssbo);
+
     glUniform1f(_shader_time, glfwGetTime());
-    // TODO: bind all the buffers
+
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_DRAW);
+
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 }
 
