@@ -48,7 +48,9 @@ void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSet
     e4core_init(engine_settings.term_width,
                 engine_settings.term_height,
                 engine_settings.char_width,
-                engine_settings.char_height);
+                engine_settings.char_height,
+                window_settings.width,
+                window_settings.height);
 
     _window_settings.callbacks.init();
 }

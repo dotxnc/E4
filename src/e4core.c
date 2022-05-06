@@ -26,6 +26,12 @@ static u32 _shader;
 static u32 _font;
 static u32 _ssbo;
 
+static u32 _shader_time;
+static u32 _shader_char_size;
+static u32 _shader_res;
+static u32 _shader_tex_size;
+static u32 _shader_buffer_size;
+
 extern u8 _main_vs_data[] asm("_binary_main_vs_glsl_start");
 extern u8 _main_vs_size[] asm("_binary_main_vs_glsl_size");
 
@@ -40,7 +46,7 @@ void e4core_loadgl()
     gladLoadGL(glfwGetProcAddress);
 }
 
-void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_height)
+void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_height, u16 screen_width, u16 screen_height)
 {
     // Set variables and allocate memory
     _term_width = term_width;
@@ -124,7 +130,12 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     glDeleteShader(vs_shader);
     glDeleteShader(fs_shader);
 
-    // TODO: get shader uniforms
+    // Retrieve shader uniform locations
+    _shader_time = glGetUniformLocation(_shader, "time");
+    _shader_char_size = glGetUniformLocation(_shader, "char_size");
+    _shader_res = glGetUniformLocation(_shader, "res");
+    _shader_tex_size = glGetUniformLocation(_shader, "tex_size");
+    _shader_buffer_size = glGetUniformLocation(_shader, "buffer_size");
 
     // Set vertex attributes
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), NULL);
@@ -152,6 +163,12 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _ssbo);
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, _ssbo);
+
+    // Set shader uniform values
+    glUniform2f(_shader_char_size, _char_width, _char_height);
+    glUniform2f(_shader_res, screen_width, screen_height);
+    glUniform2f(_shader_tex_size, _font_width, _font_height);
+    glUniform2f(_shader_buffer_size, _term_width, _term_height);
 }
 
 void e4core_clean()
@@ -166,6 +183,7 @@ void e4core_clean()
 
 void e4core_render()
 {
+    glUniform1f(_shader_time, glfwGetTime());
     // TODO: bind all the buffers
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_DRAW);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
