@@ -1,0 +1,58 @@
+#+startup: indent
+#+title: E4 org project
+#+description: E4 is a prototype ncurses-like game engine.
+
+* Notes
+Just some notes testing.
+
+* Modules
+List of all the E4 modules and their functions.
+
+** e4core
+E4core sets up and manages the text buffer as well as
+the opengl code for rendering the screen quad.
+
+#+begin_src c
+  void e4core_loadgl();
+  void e4core_init(u16, u16, u16, u16, u16);
+  void e4core_clean();
+  void e4core_render();
+  void e4core_putc(u8, u8, u16, u16);
+  void e4core_clear(u8, u8);
+#+end_src
+
+** e4draw
+E4draw contains helper functions for text and shapes.
+
+#+begin_src c
+  void e4draw_text(const char*, u8, u16, u16);
+#+end_src
+
+** e4util
+This just contains a bunch of typedefs for integer types.
+
+** e4bootstrap
+E4bootstrap creates the opengl context window and the
+runtime callbacks for game/app development.
+
+#+begin_src c
+  typedef enum InputActionE;
+  typedef enum InputModE;
+
+  typedef void (*BootstrapInitPtr)();
+  typedef void (*BootstrapUpdatePtr)(f32 dt);
+  typedef void (*BootstrapDrawPtr)(f32 dt);
+  typedef void (*BootstrapClickPtr)(i32 x, i32 y, InputActionE action);
+  typedef void (*BootstrapKeyPtr)(i32 key, InputActionE action, InputModE mod);
+
+  typedef struct BootstrapCallbacksT;
+  typedef struct BootstrapWindowSettingsT;
+  typedef struct BootstrapEngineSettingsT;
+
+  void bootstrap_init(BootstrapWindowSettingsT window_settings,
+                      BootstrapEngineSettingsT engine_settings);
+  void bootstrap_run();
+  void bootstrap_stop();
+  f32 bootstrap_time();
+#+end_src
+
