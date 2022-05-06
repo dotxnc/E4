@@ -57,9 +57,8 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     _buffer = malloc(sizeof(u16) * term_width * term_height);
     _buffer_size = sizeof(u16) * term_width * term_height;
     for (u16 i = 0; i < term_width * term_height; i++)
-        _buffer[i] = 0xff00;
+        _buffer[i] = 0x0000;
 
-    _buffer[20] = 0x9f05;
     // Vertex attributes
     struct Vertex
     {
@@ -157,7 +156,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    // Generate shader storage buffr
+    // Generate shader storage buffer
     glGenBuffers(1, &_ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _ssbo);
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_COPY);
