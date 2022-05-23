@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static u16* _buffer;
+static u16* _buffer = NULL;
 static u32 _buffer_size;
 
 static u16 _term_width;
@@ -19,12 +19,17 @@ static u16 _char_width;
 static u16 _char_height;
 static i32 _font_width;
 static i32 _font_height;
+static u16 _cursor_x;
+static u16 _cursor_y;
 
-static u32 _vbo;
-static u32 _ebo;
-static u32 _shader;
-static u32 _font;
-static u32 _ssbo;
+static CopyModeE _mode = CopyMode_Static;
+static CopyModeE _last_mode = CopyMode_None;
+
+static u32 _vbo = 0;
+static u32 _ebo = 0;
+static u32 _shader = 0;
+static u32 _font = 0;
+static u32 _ssbo = 0;
 
 static u32 _shader_time;
 static u32 _shader_char_size;
@@ -40,6 +45,13 @@ extern u8 _main_fs_size[] asm("_binary_main_fs_glsl_size");
 
 extern u8 _font_data[] asm("_binary_font_png_start");
 extern u8 _font_size[] asm("_binary_font_png_size");
+
+static void GLAPIENTRY _e4core_openglmsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* user_param)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+}
 
 void e4core_loadgl()
 {
@@ -91,32 +103,59 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * 6, indices, GL_STATIC_DRAW);
 
-    // Compile shaders
-    u32 success = 0;
-    u8 error[512];
-    i32 nul = 0;
-
+    // Compile vertex shader
     i32 vs_sz = (i32)((void*)_main_vs_size);
     char* vs_sc = malloc(sizeof(char) * vs_sz + 1);
     memcpy(vs_sc, _main_vs_data, (unsigned long)vs_sz);
     vs_sc[vs_sz] = '\0';
+    printf("Vertex shader--\n\tSize: %d\n%s\\n---\n", vs_sz, vs_sc);
 
     u32 vs_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs_shader, 1, (const char**)&vs_sc, NULL);
     glCompileShader(vs_shader);
 
-    // TODO: error checking
+    i32 success = 0;
+    glGetShaderiv(vs_shader, GL_COMPILE_STATUS, &success);
+    if (success == GL_FALSE)
+    {
+        printf("Failed!\n");
 
+        i32 err_len = 0;
+        glGetShaderiv(vs_shader, GL_INFO_LOG_LENGTH, &err_len);
+
+        char* buffer = malloc(sizeof(char) * err_len);
+        glGetShaderInfoLog(vs_shader, err_len, &err_len, buffer);
+        printf("%s\n", buffer);
+
+        abort();
+    }
+
+    // Compile fragment shader
     i32 fs_sz = (i32)((void*)_main_fs_size);
     char* fs_sc = malloc(sizeof(char) * fs_sz + 1);
     memcpy(fs_sc, _main_fs_data, (unsigned long)fs_sz);
     fs_sc[fs_sz] = '\0';
+    printf("Fragment shader--\n\tSize: %d\n%s\n---\n", fs_sz, fs_sc);
 
     u32 fs_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs_shader, 1, (const char**)&fs_sc, NULL);
     glCompileShader(fs_shader);
 
-    // TODO: error checking
+    success = 0;
+    glGetShaderiv(fs_shader, GL_COMPILE_STATUS, &success);
+    if (success == GL_FALSE)
+    {
+        printf("Failed!\n");
+
+        i32 err_len = 0;
+        glGetShaderiv(fs_shader, GL_INFO_LOG_LENGTH, &err_len);
+
+        char* buffer = malloc(sizeof(char) * err_len);
+        glGetShaderInfoLog(fs_shader, err_len, &err_len, buffer);
+        printf("%s\n", buffer);
+
+        abort();
+    }
 
     // Link the shader program
     _shader = glCreateProgram();
@@ -128,6 +167,8 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     // Don't need shader binary anymore
     glDeleteShader(vs_shader);
     glDeleteShader(fs_shader);
+    free(vs_sc);
+    free(fs_sc);
 
     // Retrieve shader uniform locations
     _shader_time = glGetUniformLocation(_shader, "time");
@@ -183,7 +224,7 @@ void e4core_render()
 {
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-    glUseProgram(_shader);
+    //    glUseProgram(_shader);
     glBindTexture(GL_TEXTURE_2D, _font);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -194,15 +235,108 @@ void e4core_render()
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_DRAW);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+
+    _last_mode = CopyMode_None;
 }
 
 void e4core_putc(u8 ch, u8 color, u16 x, u16 y)
 {
-    _buffer[y * _term_width + x] = (color << 8) | ch;
+    // avoid writing out of bounds
+    if (x >= _term_width || y >= _term_height)
+        return;
+
+    u8 cur_color = _buffer[y * _term_width + x] >> 8;
+    u8 new_color;
+    switch (_mode)
+    {
+    case CopyMode_Static:
+    {
+        new_color = color;
+    }
+    break;
+    case CopyMode_Background:
+    {
+        new_color = (cur_color & 0xF0) | color;
+    }
+    break;
+    case CopyMode_Foreground:
+    {
+        new_color = (color << 4) | (cur_color & 0x0F);
+    }
+    break;
+    case CopyMode_Both:
+    {
+        new_color = cur_color;
+    }
+    break;
+    default:
+    {
+        new_color = color;
+    }
+    break;
+    }
+
+    _buffer[y * _term_width + x] = (new_color << 8) | ch;
 }
 
 void e4core_clear(u8 ch, u8 color)
 {
+
     for (i32 i = 0; i < _term_width * _term_height; i++)
         _buffer[i] = (color << 8) | ch;
+}
+
+u16 e4core_char_width()
+{
+    return _char_width;
+}
+
+u16 e4core_char_height()
+{
+    return _char_height;
+}
+
+u16 e4core_width()
+{
+    return _term_width;
+}
+
+u16 e4core_height()
+{
+    return _term_height;
+}
+
+void e4core_cursor(i32 x, i32 y)
+{
+    // TODO: clamp to 0..buffer max
+    _cursor_x = x / _char_width;
+    _cursor_y = y / _char_height;
+}
+
+UVec16T e4core_get_cursor()
+{
+    return (UVec16T){_cursor_x, _cursor_y};
+}
+
+void e4core_copy_mode(CopyModeE mode)
+{
+    _mode = mode;
+}
+
+CopyModeE e4core_get_mode()
+{
+    return _mode;
+}
+
+void e4core_push_mode()
+{
+    assert(_last_mode == CopyMode_None && "You must pop the current copy mode first.");
+    _last_mode = _mode;
+}
+
+void e4core_pop_mode()
+{
+    assert(_last_mode != CopyMode_None && "You must push a copy mode first.");
+    _mode = _last_mode;
+    _last_mode = CopyMode_None;
 }

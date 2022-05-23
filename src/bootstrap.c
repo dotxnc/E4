@@ -18,10 +18,15 @@ static void _bootstrap_click(GLFWwindow* window, i32 button, i32 action, i32 mod
 {
     f64 x, y;
     glfwGetCursorPos(_window, &x, &y);
-    _window_settings.callbacks.click(x, y, action);
+    _window_settings.callbacks.click(x, y, action, button);
 }
 
 static void _bootstrap_char() {}
+
+static void _bootstrap_cursor(GLFWwindow* window, f64 x, f64 y)
+{
+    e4core_cursor(x, y);
+}
 
 void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSettingsT engine_settings)
 {
@@ -42,6 +47,7 @@ void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSet
 
     glfwSetMouseButtonCallback(_window, _bootstrap_click);
     glfwSetKeyCallback(_window, _bootstrap_key);
+    glfwSetCursorPosCallback(_window, _bootstrap_cursor);
     glfwMakeContextCurrent(_window);
 
     e4core_loadgl();
@@ -70,15 +76,15 @@ void bootstrap_run()
         time_last = time_now;
         _timer = time_last;
 
-        _window_settings.callbacks.update(1. / 144.);
-        _window_settings.callbacks.draw(1. / 144.);
+        glfwPollEvents();
+
+        _window_settings.callbacks.update(time_delta);
+        _window_settings.callbacks.draw(time_delta);
 
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
         e4core_render();
         glfwSwapBuffers(_window);
-
-        glfwPollEvents();
     }
 
     e4core_clean();

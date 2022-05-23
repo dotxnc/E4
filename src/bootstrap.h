@@ -8,7 +8,7 @@
  *  1. Creates the opengl context and runs the main render loop
  *  2. Loads the E4 engine and renders it
 
- * Full list of render callbacks:
+ * Full list of event callbacks:
  * - Init (void)
  * - Update (f32 dt)
  * - Draw (f32 dt)
@@ -34,10 +34,17 @@ typedef enum InputModE
     InputMod_Super = 8,
 } InputModE;
 
+typedef enum MouseButtonE
+{
+    MouseButton_Left = 0,
+    MouseButton_Right = 1,
+    MouseButton_Middle = 2,
+} MouseButtonE;
+
 typedef void (*BootstrapInitPtr)();
 typedef void (*BootstrapUpdatePtr)(f32 dt);
 typedef void (*BootstrapDrawPtr)(f32 dt);
-typedef void (*BootstrapClickPtr)(i32 x, i32 y, InputActionE action);
+typedef void (*BootstrapClickPtr)(i32 x, i32 y, InputActionE action, MouseButtonE button);
 typedef void (*BootstrapKeyPtr)(i32 key, InputActionE action, InputModE mod);
 typedef struct BootstrapCallbacksT
 {
@@ -64,10 +71,17 @@ typedef struct BootstrapEngineSettingsT
     u16 char_height;
 } BootstrapEngineSettingsT;
 
+// Creates an opengl context
 void bootstrap_init(BootstrapWindowSettingsT window_settings,
                     BootstrapEngineSettingsT engine_settings);
+
+// Start the main render & update loop
 void bootstrap_run();
+
+// Stop the main loop and close the window
 void bootstrap_stop();
+
+// Current time in seconds
 f32 bootstrap_time();
 
 #endif

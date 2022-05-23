@@ -23,6 +23,15 @@ else
 	endif
 endif
 
+BUILD ?= debug
+
+ifeq ($(BUILD),release)
+	CFLAGS += -Os
+endif
+ifeq ($(BUILD),debug)
+	CFLAGS += -g
+endif
+
 all: $(EXE)
 
 $(EXE): $(OBJS)
@@ -33,5 +42,5 @@ clean:
 
 $(OBJ)/%.c.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) -g $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 

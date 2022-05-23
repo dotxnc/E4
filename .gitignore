@@ -2,4 +2,9 @@ bin/
 obj/
 res/out/
 .cache/
+.ccls-cache/
 compile_commands.json
+.ccls
+e4.org
+
+
