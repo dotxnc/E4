@@ -38,13 +38,16 @@ u16 e4core_char_height();
 u16 e4core_width();
 u16 e4core_height();
 
+// Update palette
+void e4core_set_palette(PaletteColorT palette[16]);
+
 // Mouse cursor
-void e4core_cursor(i32 x, i32 y);
-UVec16T e4core_get_cursor();
+void e4core_set_cursor(i32 x, i32 y);
+UVec16T e4core_cursor();
 
 // Copy mode
-void e4core_copy_mode(CopyModeE mode);
-CopyModeE e4core_get_mode();
+void e4core_set_mode(CopyModeE mode);
+CopyModeE e4core_mode();
 void e4core_push_mode();
 void e4core_pop_mode();
 

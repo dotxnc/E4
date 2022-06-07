@@ -59,7 +59,7 @@ void e4gui_click(i32 x, i32 y, InputActionE action, MouseButtonE button)
 
 static bool _clicked_box(InputActionE action, MouseButtonE button, u16 x, u16 y, u16 w, u16 h)
 {
-    UVec16T cursor = e4core_get_cursor();
+    UVec16T cursor = e4core_cursor();
     if (_click_info.this_frame &&
         !_click_info.is_used &&
         _click_info.button == button &&
@@ -111,8 +111,8 @@ bool e4gui_window(const char* title, u16* x, u16* y, u16 w, u16 h)
     _offset = (UVec16T){*x + 1, *y + 1};
     _border = (UVec16T){w - 2, h - 2};
 
-    u16 mode = e4core_get_mode();
-    e4core_copy_mode(CopyMode_Static);
+    u16 mode = e4core_mode();
+    e4core_set_mode(CopyMode_Static);
 
     // high border
     e4draw_rect(*x, *y, w, h, _theme.window_background << 4 | _theme.window_border_high, LineStyle_Single);
@@ -129,12 +129,12 @@ bool e4gui_window(const char* title, u16* x, u16* y, u16 w, u16 h)
     // window title
     e4draw_text(title, _theme.window_title_background << 4 | _theme.window_title, *x + ((w / 2) - (strlen(title) / 2 + 1)), *y);
 
-    e4core_copy_mode(mode);
+    e4core_set_mode(mode);
 
     // dragging
     if (_clicked_box(InputAction_Press, MouseButton_Left, *x, *y, w, 1))
     {
-        UVec16T mpos = e4core_get_cursor();
+        UVec16T mpos = e4core_cursor();
         dragging = true;
         origin.x = *x;
         origin.y = *y;
@@ -145,7 +145,7 @@ bool e4gui_window(const char* title, u16* x, u16* y, u16 w, u16 h)
 
     if (dragging && captured_window == _window_stack)
     {
-        UVec16T mpos = e4core_get_cursor();
+        UVec16T mpos = e4core_cursor();
         offset.x = mpos.x - origin.x;
         offset.y = mpos.y - origin.y;
 
@@ -175,7 +175,7 @@ bool e4gui_button(const char* text, u16 x, u16 y, i16 hotkey)
         return false;
     }
 
-    UVec16T cursor = e4core_get_cursor();
+    UVec16T cursor = e4core_cursor();
     bool hover = cursor.x >= x &&
                  cursor.x < x + strlen(text) &&
                  cursor.y == y;
@@ -200,7 +200,7 @@ void e4gui_text(char* buffer, u16* cursor, u16 max, u16 x, u16 y, u16 w)
     e4gui_truepos(&x, &y);
 
     e4core_push_mode();
-    e4core_copy_mode(CopyMode_Background);
+    e4core_set_mode(CopyMode_Background);
 
     e4core_putc(0xd6, _theme.text_outer, x, y);
     e4core_putc(0xba, _theme.text_outer, x, y + 1);

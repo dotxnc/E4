@@ -108,7 +108,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     char* vs_sc = malloc(sizeof(char) * vs_sz + 1);
     memcpy(vs_sc, _main_vs_data, (unsigned long)vs_sz);
     vs_sc[vs_sz] = '\0';
-    printf("Vertex shader--\n\tSize: %d\n%s\\n---\n", vs_sz, vs_sc);
+    //    printf("Vertex shader--\n\tSize: %d\n%s\\n---\n", vs_sz, vs_sc);
 
     u32 vs_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs_shader, 1, (const char**)&vs_sc, NULL);
@@ -135,7 +135,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     char* fs_sc = malloc(sizeof(char) * fs_sz + 1);
     memcpy(fs_sc, _main_fs_data, (unsigned long)fs_sz);
     fs_sc[fs_sz] = '\0';
-    printf("Fragment shader--\n\tSize: %d\n%s\n---\n", fs_sz, fs_sc);
+    //    printf("Fragment shader--\n\tSize: %d\n%s\n---\n", fs_sz, fs_sc);
 
     u32 fs_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs_shader, 1, (const char**)&fs_sc, NULL);
@@ -306,24 +306,36 @@ u16 e4core_height()
     return _term_height;
 }
 
-void e4core_cursor(i32 x, i32 y)
+void e4core_set_palette(PaletteColorT palette[16])
+{
+    for (u32 i = 0; i < 16; i++)
+    {
+        char dumb[12];
+        sprintf(dumb, "palette[%d]", i);
+        PaletteColorT dumber = palette[i];
+        u32 p = (glGetUniformLocation(_shader, dumb));
+        glUniform3f(p, (f32)dumber.r / 255., (f32)dumber.g / 255., (f32)dumber.b / 255.);
+    }
+}
+
+void e4core_set_cursor(i32 x, i32 y)
 {
     // TODO: clamp to 0..buffer max
     _cursor_x = x / _char_width;
     _cursor_y = y / _char_height;
 }
 
-UVec16T e4core_get_cursor()
+UVec16T e4core_cursor()
 {
     return (UVec16T){_cursor_x, _cursor_y};
 }
 
-void e4core_copy_mode(CopyModeE mode)
+void e4core_set_mode(CopyModeE mode)
 {
     _mode = mode;
 }
 
-CopyModeE e4core_get_mode()
+CopyModeE e4core_mode()
 {
     return _mode;
 }
