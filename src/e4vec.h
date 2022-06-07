@@ -15,4 +15,11 @@ typedef struct IVec16T
     i16 y;
 } IVec16T;
 
+typedef struct PaletteColorT
+{
+    u8 r;
+    u8 g;
+    u8 b;
+} PaletteColorT;
+
 #endif
