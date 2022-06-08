@@ -208,9 +208,11 @@ f32 bootstrap_time();
 // Input event helpers
 bool bootstrap_key_pressed(InputKeyE key);
 bool bootstrap_key_released(InputKeyE key);
+bool bootstrap_key_repeat(InputKeyE key);
 bool bootstrap_key_down(InputKeyE key);
 bool bootstrap_mouse_pressed(MouseButtonE button);
 bool bootstrap_mouse_released(MouseButtonE button);
 bool bootstrap_mouse_down(MouseButtonE button);
+char bootstrap_get_char();
 
 #endif

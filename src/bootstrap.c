@@ -11,32 +11,20 @@ static f32 _timer = 0.;
 
 typedef enum _KeyCheckE
 {
-    _KeyCheck_None,
+    _KeyCheck_None = -1,
     _KeyCheck_Pressed,
     _KeyCheck_Released,
+    _KeyCheck_Repeat
 } _KeyCheckE;
 
-static InputActionE _keys[InputKey_Count];
 static _KeyCheckE _keycheck[InputKey_Count];
-
-static InputActionE _mouse[3];
 static _KeyCheckE _mousecheck[3];
+static u32 _charpressed = 0;
 
 static void _bootstrap_key(GLFWwindow* window, i32 key, i32 scan, i32 action, i32 mods)
 {
     _window_settings.callbacks.key(key, action, mods);
-    _keys[key] = action;
-    switch (action)
-    {
-    case InputAction_Press:
-        _keycheck[key] = _KeyCheck_Pressed;
-        break;
-    case InputAction_Release:
-        _keycheck[key] = _KeyCheck_Released;
-        break;
-    default:
-        break;
-    };
+    _keycheck[key] = action;
 }
 
 static void _bootstrap_click(GLFWwindow* window, i32 button, i32 action, i32 mods)
@@ -44,21 +32,13 @@ static void _bootstrap_click(GLFWwindow* window, i32 button, i32 action, i32 mod
     f64 x, y;
     glfwGetCursorPos(_window, &x, &y);
     _window_settings.callbacks.click(x, y, action, button);
-
-    switch (action)
-    {
-    case InputAction_Press:
-        _mousecheck[button] = _KeyCheck_Pressed;
-        break;
-    case InputAction_Release:
-        _mousecheck[button] = _KeyCheck_Released;
-        break;
-    default:
-        break;
-    };
+    _mousecheck[button] = action;
 }
 
-static void _bootstrap_char() {}
+static void _bootstrap_char(GLFWwindow* window, u32 unicode)
+{
+    _charpressed = unicode;
+}
 
 static void _bootstrap_cursor(GLFWwindow* window, f64 x, f64 y)
 {
@@ -84,6 +64,7 @@ void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSet
 
     glfwSetMouseButtonCallback(_window, _bootstrap_click);
     glfwSetKeyCallback(_window, _bootstrap_key);
+    glfwSetCharCallback(_window, _bootstrap_char);
     glfwSetCursorPosCallback(_window, _bootstrap_cursor);
     glfwMakeContextCurrent(_window);
 
@@ -113,6 +94,7 @@ void bootstrap_run()
         time_last = time_now;
         _timer = time_last;
 
+        _charpressed = 0;
         glfwPollEvents();
 
         _window_settings.callbacks.update(time_delta);
@@ -158,6 +140,16 @@ bool bootstrap_key_released(InputKeyE key)
     return false;
 }
 
+bool bootstrap_key_repeat(InputKeyE key)
+{
+    if (_keycheck[key] == _KeyCheck_Repeat)
+    {
+        _keycheck[key] = _KeyCheck_None;
+        return true;
+    }
+    return false;
+}
+
 bool bootstrap_key_down(InputKeyE key)
 {
     return glfwGetKey(_window, key) == GLFW_PRESS;
@@ -186,4 +178,10 @@ bool bootstrap_mouse_released(MouseButtonE button)
 bool bootstrap_mouse_down(MouseButtonE button)
 {
     return glfwGetMouseButton(_window, button);
+}
+
+char bootstrap_get_char()
+{
+    u32 code = _charpressed;
+    return code;
 }
