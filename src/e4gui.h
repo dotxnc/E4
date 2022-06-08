@@ -5,10 +5,6 @@
 #include "e4util.h"
 #include "e4vec.h"
 
-// Just have to settle with the fact that the
-// gui module relies on the glfw bootstrapper
-//
-// FIXME: Decouple this.
 #include "bootstrap.h"
 
 typedef struct GuiThemeT
@@ -31,22 +27,42 @@ typedef struct GuiThemeT
     u16 text_default_text;
 } GuiThemeT;
 
-// Creates a moveable window
-bool e4gui_window(const char* title, u16* x, u16* y, u16 w, u16 h);
-// Panel creates a 2d box to contain the widgets
-void e4gui_panel(u16 x, u16 y, u16 w, u16 h);
-// a simple text button
-bool e4gui_button(const char* text, u16 x, u16 y, i16 hotkey);
-// prototype text field
-void e4gui_text(char* buffer, u16* cursor, u16 max, u16 x, u16 y, u16 w);
+typedef struct GuiStateT GuiStateT;
+typedef struct GuiContainerT GuiContainerT;
+typedef struct GuiObjectT GuiObjectT;
 
-void e4gui_init();
-void e4gui_theme(GuiThemeT theme);
-void e4gui_enable();
-void e4gui_disable();
-void e4gui_click(i32 x, i32 y, InputActionE action, MouseButtonE button);
-void e4gui_key(i32 key, InputActionE action, InputModE mod);
-void e4gui_truepos(u16* x, u16* y);
-void e4gui_finish();
+typedef void (*GuiObjectUpdatePtr)(GuiObjectT* object);
+typedef void (*GuiObjectDrawPtr)(GuiObjectT* object);
+struct GuiObjectT
+{
+    GuiContainerT* container;
+    GuiStateT* state;
+    GuiObjectUpdatePtr _update;
+    GuiObjectDrawPtr _draw;
+    u16 x, y;
+    u16 w, h;
+    bool focused;
+};
+
+struct GuiContainerT
+{
+    GuiThemeT theme;
+    ListT* objects;
+};
+
+GuiContainerT* e4gui_create();
+void e4gui_add_object(GuiContainerT* container, GuiObjectT* object);
+void e4gui_clean(GuiContainerT* container);
+void e4gui_update(GuiContainerT* container);
+void e4gui_draw(GuiContainerT* container);
+
+// Gui object definitions
+typedef void (*ButtonCallbackPtr)(GuiObjectT* object);
+typedef struct GuiButtonStateT
+{
+    char* label;
+    ButtonCallbackPtr callback;
+} GuiButtonStateT;
+GuiObjectT* e4gui_button(char* label, ButtonCallbackPtr callback, u16 x, u16 y);
 
 #endif
