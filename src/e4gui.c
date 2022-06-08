@@ -183,7 +183,7 @@ bool e4gui_button(const char* text, u16 x, u16 y, i16 hotkey)
     if (hover)
     {
         color = _theme.button_hover;
-        if (_click_info.button == MouseButton_Left && _click_info.action == InputAction_Press)
+        if (bootstrap_mouse_down(MouseButton_Left))
             color = _theme.button_clicked;
     }
 
@@ -192,7 +192,7 @@ bool e4gui_button(const char* text, u16 x, u16 y, i16 hotkey)
         e4core_putc(text[hotkey], _theme.button_hotkey, x, y);
     e4draw_text(text + hotkey + 1, color, x + hotkey + 1, y);
 
-    return _clicked_box(InputAction_Press, MouseButton_Left, x, y, strlen(text), 1);
+    return hover && bootstrap_mouse_pressed(MouseButton_Left);
 }
 
 void e4gui_text(char* buffer, u16* cursor, u16 max, u16 x, u16 y, u16 w)
@@ -212,6 +212,19 @@ void e4gui_text(char* buffer, u16* cursor, u16 max, u16 x, u16 y, u16 w)
 
     if (!_enabled)
         return;
+
+    u32 len = strlen(buffer);
+    char c = bootstrap_get_char();
+    if (len < max && c)
+    {
+        buffer[len++] = c;
+        (*cursor)++;
+    }
+    if (len > 0 && bootstrap_key_pressed(InputKey_Backspace))
+    {
+        buffer[--len] = '\0';
+        (*cursor)--;
+    }
 
     e4draw_text(buffer, _theme.text_text, x + 1, y + 1);
     e4core_putc(0xdd, _theme.text_cursor, x + 1 + *cursor, y + 1);
