@@ -27,7 +27,7 @@ typedef struct GuiThemeT
     u16 text_default_text;
 } GuiThemeT;
 
-typedef struct GuiStateT GuiStateT;
+typedef void* GuiStateT;
 typedef struct GuiContainerT GuiContainerT;
 typedef struct GuiObjectT GuiObjectT;
 
@@ -42,6 +42,7 @@ struct GuiObjectT
     u16 x, y;
     u16 w, h;
     bool focused;
+    bool enabled;
 };
 
 struct GuiContainerT
@@ -64,5 +65,20 @@ typedef struct GuiButtonStateT
     ButtonCallbackPtr callback;
 } GuiButtonStateT;
 GuiObjectT* e4gui_button(char* label, ButtonCallbackPtr callback, u16 x, u16 y);
+
+typedef void (*DropMenuCallbackPtr)(GuiObjectT* object);
+typedef struct DropMenuItemT
+{
+    char* label;
+    DropMenuCallbackPtr callback;
+} DropMenuItemT;
+typedef struct GuiDropMenuStateT
+{
+    char* label;
+    DropMenuItemT* table;
+    u32 table_count;
+    bool extended;
+} GuiDropMenuStateT;
+GuiObjectT* e4gui_dropmenu(char* label, DropMenuItemT* table, u32 table_count, u16 x, u16 y);
 
 #endif

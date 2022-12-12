@@ -28,6 +28,9 @@ void e4core_clean();
 // Render the complete scene buffer
 void e4core_render();
 
+// Acts kind of like glScissor
+void e4core_scissor(u16 x, u16 y, u16 w, u16 h);
+
 // Core drawing functions
 void e4core_putc(u8 ch, u8 color, u16 x, u16 y);
 void e4core_clear(u8 ch, u8 color);

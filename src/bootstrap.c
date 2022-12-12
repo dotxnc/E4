@@ -12,8 +12,8 @@ static f32 _timer = 0.;
 typedef enum _KeyCheckE
 {
     _KeyCheck_None = -1,
-    _KeyCheck_Pressed,
     _KeyCheck_Released,
+    _KeyCheck_Pressed,
     _KeyCheck_Repeat
 } _KeyCheckE;
 
@@ -77,6 +77,8 @@ void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSet
                 window_settings.height);
 
     _window_settings.callbacks.init();
+
+    memset(_keycheck, _KeyCheck_None, sizeof(_keycheck));
 }
 
 void bootstrap_run()

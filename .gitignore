@@ -6,5 +6,5 @@ res/out/
 compile_commands.json
 .ccls
 e4.org
-
+build/
 

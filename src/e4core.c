@@ -37,6 +37,11 @@ static u32 _shader_res;
 static u32 _shader_tex_size;
 static u32 _shader_buffer_size;
 
+static u16 _scissor_x = 0;
+static u16 _scissor_y = 0;
+static u16 _scissor_w = 0;
+static u16 _scissor_h = 0;
+
 extern u8 _main_vs_data[] asm("_binary_main_vs_glsl_start");
 extern u8 _main_vs_size[] asm("_binary_main_vs_glsl_size");
 
@@ -236,13 +241,28 @@ void e4core_render()
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
+    // reset copy mode for some reason
     _last_mode = CopyMode_None;
+
+    // reset scissor test
+    _scissor_x = 0;
+    _scissor_y = 0;
+    _scissor_w = _term_width;
+    _scissor_h = _term_height;
+}
+
+void e4core_scissor(u16 x, u16 y, u16 w, u16 h)
+{
+    _scissor_x = x;
+    _scissor_y = y;
+    _scissor_w = w;
+    _scissor_h = h;
 }
 
 void e4core_putc(u8 ch, u8 color, u16 x, u16 y)
 {
     // avoid writing out of bounds
-    if (x >= _term_width || y >= _term_height)
+    if (x >= _scissor_x + _scissor_w || y >= _scissor_y + _scissor_h || x < _scissor_x || y < _scissor_y)
         return;
 
     u8 cur_color = _buffer[y * _term_width + x] >> 8;
