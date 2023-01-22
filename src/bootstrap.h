@@ -205,6 +205,8 @@ void bootstrap_run();
 void bootstrap_stop();
 // Current time in seconds
 f32 bootstrap_time();
+// Frame time delta
+f32 bootstrap_dtime();
 // Input event helpers
 bool bootstrap_key_pressed(InputKeyE key);
 bool bootstrap_key_released(InputKeyE key);

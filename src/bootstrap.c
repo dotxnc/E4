@@ -7,7 +7,8 @@ static GLFWwindow* _window = NULL;
 static BootstrapWindowSettingsT _window_settings;
 static BootstrapEngineSettingsT _engine_settings;
 static bool _running = true;
-static f32 _timer = 0.;
+static f32 _timer = 0.f;
+static f32 _delta_time = 0.f;
 
 typedef enum _KeyCheckE
 {
@@ -96,6 +97,8 @@ void bootstrap_run()
         time_last = time_now;
         _timer = time_last;
 
+        _delta_time = time_delta;
+
         _charpressed = 0;
         glfwPollEvents();
 
@@ -120,6 +123,11 @@ void bootstrap_stop()
 f32 bootstrap_time()
 {
     return _timer;
+}
+
+f32 bootstrap_dtime()
+{
+    return _delta_time;
 }
 
 bool bootstrap_key_pressed(InputKeyE key)

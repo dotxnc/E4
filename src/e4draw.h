@@ -12,6 +12,7 @@ typedef enum
 } LineStyleE;
 
 void e4draw_text(const char* text, u8 color, u16 x, u16 y);
+void e4draw_textn(const char* text, u8 color, u16 x, u16 y, u16 len);
 void e4draw_rect(u16 x, u16 y, u16 w, u16 h, u8 color, LineStyleE style);
 void e4draw_fill_rect(u8 ch, u8 color, u16 x, u16 y, u16 w, u16 h);
 void e4draw_rich_text(const char* text, u16 x, u16 y);

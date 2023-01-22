@@ -306,6 +306,11 @@ void e4core_clear(u8 ch, u8 color)
         _buffer[i] = (color << 8) | ch;
 }
 
+u8 e4core_getch(u16 x, u16 y)
+{
+    return _buffer[y * _term_width + x] & 0x00FF;
+}
+
 u16 e4core_char_width()
 {
     return _char_width;

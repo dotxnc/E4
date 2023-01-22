@@ -35,6 +35,11 @@ void e4core_scissor(u16 x, u16 y, u16 w, u16 h);
 void e4core_putc(u8 ch, u8 color, u16 x, u16 y);
 void e4core_clear(u8 ch, u8 color);
 
+// Future me: there's a better solution.
+//      I'm just being lazy, sorry.
+// Get character at position
+u8 e4core_getch(u16 x, u16 y);
+
 // Get variables
 u16 e4core_char_width();
 u16 e4core_char_height();

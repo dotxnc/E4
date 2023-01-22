@@ -9,6 +9,12 @@ void e4draw_text(const char* text, u8 color, u16 x, u16 y)
         e4core_putc(text[i], color, x + i, y);
 }
 
+void e4draw_textn(const char* text, u8 color, u16 x, u16 y, u16 len)
+{
+    for (i32 i = 0; i < (len < strlen(text) ? len : strlen(text)); i++)
+        e4core_putc(text[i], color, x + i, y);
+}
+
 void e4draw_rect(u16 x, u16 y, u16 w, u16 h, u8 color, LineStyleE style)
 {
     u8* palette = NULL;
