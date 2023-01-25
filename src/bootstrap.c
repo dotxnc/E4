@@ -13,9 +13,9 @@ static f32 _delta_time = 0.f;
 typedef enum _KeyCheckE
 {
     _KeyCheck_None = -1,
-    _KeyCheck_Released,
-    _KeyCheck_Pressed,
-    _KeyCheck_Repeat
+    _KeyCheck_Released = GLFW_RELEASE,
+    _KeyCheck_Pressed = GLFW_PRESS,
+    _KeyCheck_Repeat = GLFW_REPEAT,
 } _KeyCheckE;
 
 static _KeyCheckE _keycheck[InputKey_Count];
@@ -177,7 +177,7 @@ bool bootstrap_mouse_pressed(MouseButtonE button)
 
 bool bootstrap_mouse_released(MouseButtonE button)
 {
-    if (_mousecheck[button] == _KeyCheck_Pressed)
+    if (_mousecheck[button] == _KeyCheck_Released)
     {
         _mousecheck[button] = _KeyCheck_None;
         return true;
