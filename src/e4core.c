@@ -2,7 +2,11 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "dep/stb_image.h"
-#define GLAD_GL_IMPLEMENTATION
+#define SOGL_MAJOR_VERSION 4
+#define SOGL_MINOR_VERSION 5
+#define SOGL_OVR_multiview
+#define SOGL_KHR_parallel_shader_compile
+#define SOGL_IMPLEMENTATION_WIN32
 #include "dep/gl.h"
 #include <GLFW/glfw3.h>
 
@@ -10,7 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static u16* _buffer = NULL;
+//      v---This doesn't need to be bigger than 16 bits (u16), GLSL is forcing my hand.
+static u32* _buffer = NULL;
 static u32 _buffer_size;
 
 static u16 _term_width;
@@ -60,20 +65,34 @@ static void GLAPIENTRY _e4core_openglmsg(GLenum source, GLenum type, GLuint id, 
 
 void e4core_loadgl()
 {
-    gladLoadGL(glfwGetProcAddress);
+    if (!sogl_loadOpenGL()) {
+        const char **failures = sogl_getFailures();
+        int i = 1;
+        while (*failures) {
+            fprintf(stderr, "Failed to load function %s\n", *failures);
+            failures++;
+        }
+    }
+    // int ver = gladLoadGL(glfwGetProcAddress);
+    if (0)
+    {
+        printf("Failed to load opengl. dummy.\n");
+        exit(1);
+    }
 }
 
 void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_height, u16 screen_width, u16 screen_height)
 {
+
     // Set variables and allocate memory
     _term_width = term_width;
     _term_height = term_height;
     _char_width = char_width;
     _char_height = char_height;
 
-    _buffer = malloc(sizeof(u16) * term_width * term_height);
-    _buffer_size = sizeof(u16) * term_width * term_height;
-    for (u16 i = 0; i < term_width * term_height; i++)
+    _buffer = malloc(sizeof(u32) * term_width * term_height);
+    _buffer_size = sizeof(u32) * term_width * term_height;
+    for (u32 i = 0; i < term_width * term_height; i++)
         _buffer[i] = 0x0000;
 
     // Vertex attributes
@@ -102,7 +121,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     // Generate the screen quad buffers
     glGenBuffers(1, &_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(struct Vertex) * 4, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(struct Vertex) * 4, &vertices[0], GL_STATIC_DRAW);
 
     glGenBuffers(1, &_ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -183,9 +202,9 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     _shader_buffer_size = glGetUniformLocation(_shader, "buffer_size");
 
     // Set vertex attributes
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), NULL);
+    glVertexAttribPointer(glGetAttribLocation(_shader, "position"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), NULL);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
+    glVertexAttribPointer(glGetAttribLocation(_shader, "i_tex_coords"), 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
     glEnableVertexAttribArray(1);
 
     // Load font text

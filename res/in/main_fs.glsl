@@ -1,5 +1,5 @@
-#version 430
-#extension GL_NV_gpu_shader5: enable
+#version 450
+//#extension GL_NV_gpu_shader5: enable
 
 in vec2 tex_coords;
 out vec4 color;
@@ -7,15 +7,15 @@ out vec4 color;
 uniform sampler2D font_texture;
 
 layout (std430, binding = 3) buffer SSBOBlock {
-    uint16_t data[];
+    uint data[];
 };
 
 uniform float time;
 
 uniform vec2 char_size = vec2(10, 10);
-uniform vec2 res = vec2(1280, 720);
+uniform vec2 res = vec2(640, 480);
 uniform vec2 tex_size = vec2(160, 160);
-uniform vec2 buffer_size = vec2(128, 72);
+uniform vec2 buffer_size = vec2(64, 48);
 
 uniform vec3 palette[16] = {
     vec3(0.549, 0.118, 0.173),
@@ -36,13 +36,14 @@ uniform vec3 palette[16] = {
     vec3(0.031, 0.02, 0.055),
 };
 
-uint16_t get_array(int x, int y)
+uint get_array(int x, int y)
 {
     return data[ int(floor(buffer_size.x)) * y + x ];
 }
 
 void main()
 {
+    
     // Position in "buffer-space" of the current character/tile
     double x = (tex_coords.x * res.x)/int(char_size.x);
     double y = (tex_coords.y * res.y)/int(char_size.y);
