@@ -2,6 +2,23 @@
 #include "e4core.h"
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+/*
+
+int write_log(int priority, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    if(priority & PRIO_LOG)
+            vprintf(format, args);
+
+    va_end(args);
+}
+*/
 
 void e4draw_text(const char* text, u8 color, u16 x, u16 y)
 {
@@ -13,6 +30,36 @@ void e4draw_textn(const char* text, u8 color, u16 x, u16 y, u16 len)
 {
     for (i32 i = 0; i < (len < strlen(text) ? len : strlen(text)); i++)
         e4core_putc(text[i], color, x + i, y);
+}
+
+void e4draw_textf(u8 color, u16 x, u16 y, const char* text, ...)
+{
+    static char formattedStr[256];
+
+    va_list args;
+    va_start(args, text);
+
+    // Calculate the length of the formatted string
+    int length = vsnprintf(NULL, 0, text, args);
+
+    va_end(args);
+
+    if (length > 255) {
+        e4draw_text("!ERROR!", 0xF0, x, y);
+        return;
+    }
+
+    va_start(args, text);
+
+    // Allocate memory for the formatted string
+    // char* formattedStr = (char*)malloc(length + 1);
+
+    // Format the string and store it in the allocated memory
+    vsnprintf(formattedStr, length + 1, text, args);
+
+    va_end(args);
+
+    e4draw_text(formattedStr, color, x, y);
 }
 
 void e4draw_rect(u16 x, u16 y, u16 w, u16 h, u8 color, LineStyleE style)
