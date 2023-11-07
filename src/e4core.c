@@ -2,11 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "dep/stb_image.h"
-#define SOGL_MAJOR_VERSION 4
-#define SOGL_MINOR_VERSION 5
-#define SOGL_OVR_multiview
-#define SOGL_KHR_parallel_shader_compile
-#define SOGL_IMPLEMENTATION_WIN32
+#define GLAD_GL_IMPLEMENTATION
 #include "dep/gl.h"
 #include <GLFW/glfw3.h>
 
@@ -14,9 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-//      v---This doesn't need to be bigger than 16 bits (u16), GLSL is forcing my hand.
+//------v--- This doesn't need to be bigger than 16 bits (u16), GLSL is forcing my hand.
 static u32* _buffer = NULL;
 static u32 _buffer_size;
+static void* _staged_buffer;
 
 static u16 _term_width;
 static u16 _term_height;
@@ -24,11 +21,13 @@ static u16 _char_width;
 static u16 _char_height;
 static i32 _font_width;
 static i32 _font_height;
+static u16 _screen_width;
+static u16 _screen_height;
 static u16 _cursor_x;
 static u16 _cursor_y;
 
-static CopyModeE _mode = CopyMode_Static;
-static CopyModeE _last_mode = CopyMode_None;
+static TileFilterE _mode = TileFilter_Static;
+static TileFilterE _last_mode = TileFilter_None;
 
 static u32 _vbo = 0;
 static u32 _ebo = 0;
@@ -36,6 +35,7 @@ static u32 _shader = 0;
 static u32 _font = 0;
 static u32 _ssbo = 0;
 
+static u32 _shader_data;
 static u32 _shader_time;
 static u32 _shader_char_size;
 static u32 _shader_res;
@@ -65,16 +65,8 @@ static void GLAPIENTRY _e4core_openglmsg(GLenum source, GLenum type, GLuint id, 
 
 void e4core_loadgl()
 {
-    if (!sogl_loadOpenGL()) {
-        const char **failures = sogl_getFailures();
-        int i = 1;
-        while (*failures) {
-            fprintf(stderr, "Failed to load function %s\n", *failures);
-            failures++;
-        }
-    }
-    // int ver = gladLoadGL(glfwGetProcAddress);
-    if (0)
+    int ver = gladLoadGL(glfwGetProcAddress);
+    if (ver == 0)
     {
         printf("Failed to load opengl. dummy.\n");
         exit(1);
@@ -89,11 +81,15 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     _term_height = term_height;
     _char_width = char_width;
     _char_height = char_height;
+    _screen_width = screen_width;
+    _screen_height = screen_height;
 
     _buffer = malloc(sizeof(u32) * term_width * term_height);
     _buffer_size = sizeof(u32) * term_width * term_height;
     for (u32 i = 0; i < term_width * term_height; i++)
         _buffer[i] = 0x0000;
+
+    glViewport(0, 0, _screen_width, _screen_height);
 
     // Vertex attributes
     struct Vertex
@@ -132,7 +128,6 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     char* vs_sc = malloc(sizeof(char) * vs_sz + 1);
     memcpy(vs_sc, _main_vs_data, (unsigned long)vs_sz);
     vs_sc[vs_sz] = '\0';
-    //    printf("Vertex shader--\n\tSize: %d\n%s\\n---\n", vs_sz, vs_sc);
 
     u32 vs_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs_shader, 1, (const char**)&vs_sc, NULL);
@@ -159,7 +154,6 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     char* fs_sc = malloc(sizeof(char) * fs_sz + 1);
     memcpy(fs_sc, _main_fs_data, (unsigned long)fs_sz);
     fs_sc[fs_sz] = '\0';
-    //    printf("Fragment shader--\n\tSize: %d\n%s\n---\n", fs_sz, fs_sc);
 
     u32 fs_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs_shader, 1, (const char**)&fs_sc, NULL);
@@ -195,6 +189,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
     free(fs_sc);
 
     // Retrieve shader uniform locations
+    _shader_data = glad_glGetUniformLocation(_shader, "data");
     _shader_time = glGetUniformLocation(_shader, "time");
     _shader_char_size = glGetUniformLocation(_shader, "char_size");
     _shader_res = glGetUniformLocation(_shader, "res");
@@ -229,7 +224,7 @@ void e4core_init(u16 term_width, u16 term_height, u16 char_width, u16 char_heigh
 
     // Set shader uniform values
     glUniform2f(_shader_char_size, _char_width, _char_height);
-    glUniform2f(_shader_res, screen_width, screen_height);
+    glUniform2f(_shader_res, _screen_width, _screen_height);
     glUniform2f(_shader_tex_size, _font_width, _font_height);
     glUniform2f(_shader_buffer_size, _term_width, _term_height);
 }
@@ -246,6 +241,15 @@ void e4core_clean()
 
 void e4core_render()
 {
+    // if (_staged_buffer != NULL)
+    // {
+        // Set shader uniform values
+        glUniform2f(_shader_char_size, _char_width, _char_height);
+        glUniform2f(_shader_res, _screen_width, _screen_height);
+        glUniform2f(_shader_tex_size, _font_width, _font_height);
+        glUniform2f(_shader_buffer_size, _term_width, _term_height);
+    // }
+
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
     //    glUseProgram(_shader);
@@ -257,11 +261,12 @@ void e4core_render()
     glUniform1f(_shader_time, glfwGetTime());
 
     glBufferData(GL_SHADER_STORAGE_BUFFER, _buffer_size, _buffer, GL_DYNAMIC_DRAW);
+    glUniform1uiv(_shader_data, _buffer_size, _buffer);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
     // reset copy mode for some reason
-    _last_mode = CopyMode_None;
+    _last_mode = TileFilter_None;
 
     // reset scissor test
     _scissor_x = 0;
@@ -272,6 +277,14 @@ void e4core_render()
 
 void e4core_scissor(u16 x, u16 y, u16 w, u16 h)
 {
+    // TODO: Doesn't work plz fix
+    if (x * y * w * h == 0)
+    {
+        _scissor_x = 0;
+        _scissor_y = y;
+        _scissor_w = _term_width;
+        _scissor_h = _term_height;
+    }
     _scissor_x = x;
     _scissor_y = y;
     _scissor_w = w;
@@ -288,22 +301,22 @@ void e4core_putc(u8 ch, u8 color, u16 x, u16 y)
     u8 new_color;
     switch (_mode)
     {
-    case CopyMode_Static:
+    case TileFilter_Static:
     {
         new_color = color;
     }
     break;
-    case CopyMode_Background:
+    case TileFilter_Background:
     {
         new_color = (cur_color & 0xF0) | color;
     }
     break;
-    case CopyMode_Foreground:
+    case TileFilter_Foreground:
     {
         new_color = (color << 4) | (cur_color & 0x0F);
     }
     break;
-    case CopyMode_Both:
+    case TileFilter_Both:
     {
         new_color = cur_color;
     }
@@ -364,9 +377,17 @@ void e4core_set_palette(PaletteColorT palette[16])
 
 void e4core_set_cursor(i32 x, i32 y)
 {
+
+    // Get terminal res
+    u16 term_res_w = _term_width * _char_width;
+    u16 term_res_h = _term_height * _char_height;
+    // Get scale difference between terminal res & screen res
+    f32 scale_x = (f32)_screen_width / (f32)term_res_w;
+    f32 scale_y = (f32)_screen_height / (f32)term_res_h;
+
     // TODO: clamp to 0..buffer max
-    _cursor_x = x / _char_width;
-    _cursor_y = y / _char_height;
+    _cursor_x = (f32)x / _char_width / scale_x;
+    _cursor_y = (f32)y / _char_height / scale_y;
 }
 
 UVec16T e4core_cursor()
@@ -374,25 +395,42 @@ UVec16T e4core_cursor()
     return (UVec16T){_cursor_x, _cursor_y};
 }
 
-void e4core_set_mode(CopyModeE mode)
+void e4core_set_mode(TileFilterE mode)
 {
     _mode = mode;
 }
 
-CopyModeE e4core_mode()
+TileFilterE e4core_mode()
 {
     return _mode;
 }
 
 void e4core_push_mode()
 {
-    assert(_last_mode == CopyMode_None && "You must pop the current copy mode first.");
+    assert(_last_mode == TileFilter_None && "You must pop the current copy mode first.");
     _last_mode = _mode;
 }
 
 void e4core_pop_mode()
 {
-    assert(_last_mode != CopyMode_None && "You must push a copy mode first.");
+    assert(_last_mode != TileFilter_None && "You must push a copy mode first.");
     _mode = _last_mode;
-    _last_mode = CopyMode_None;
+    _last_mode = TileFilter_None;
+}
+
+void e4pip_stage(PipStageT* stage)
+{
+    if (stage->buffer == NULL)
+        stage->buffer = malloc(sizeof(u32) * stage->term_width * stage->term_height);
+    _staged_buffer = _buffer;
+    _buffer = stage->buffer;
+}
+
+void e4pip_draw()
+{
+    // Set shader uniform values
+    glUniform2f(_shader_char_size,   _char_width,   _char_height);
+    glUniform2f(_shader_res,         _screen_width, _screen_height);
+    glUniform2f(_shader_tex_size,    _font_width,   _font_height);
+    glUniform2f(_shader_buffer_size, _term_width,   _term_height);
 }

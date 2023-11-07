@@ -7,6 +7,16 @@
 // Background, Foreground
 #define MAKE_COLOR(b, f) ((u8)((b << 4) | f))
 
+typedef enum TileFilterE
+{
+    TileFilter_None,
+    TileFilter_Static,
+    TileFilter_Background,
+    TileFilter_Foreground,
+    TileFilter_Both,
+} TileFilterE;
+
+/* deprecated enum */
 typedef enum CopyModeE
 {
     CopyMode_None,
@@ -54,14 +64,33 @@ void e4core_set_cursor(i32 x, i32 y);
 UVec16T e4core_cursor();
 
 // Copy mode
-void e4core_set_mode(CopyModeE mode);
-CopyModeE e4core_mode();
-void e4core_push_mode();
-void e4core_pop_mode();
+void e4core_set_filter(TileFilterE mode);
+TileFilterE e4core_filter();
+void e4core_push_filter();
+void e4core_pop_filter();
+
+/* deprecated functions */
+#define e4core_set_mode(mode) e4core_set_filter(mode)
+#define e4core_mode e4core_filter
+#define e4core_push_mode e4core_push_filter
+#define e4core_pop_mode e4core_pop_filter
 
 // Input events
 void e4core_click(u16 click);
 void e4core_key();
 void e4core_char();
+
+// Picture in picture.
+typedef struct PipStageT {
+    u32* buffer;
+    u16 term_width;
+    u16 term_height;
+    u16 char_width;
+    u16 char_height;
+} PipStageT;
+
+void e4pip_stage(PipStageT* stage);
+
+void e4pip_draw();
 
 #endif
