@@ -80,6 +80,7 @@ void bootstrap_init(BootstrapWindowSettingsT window_settings, BootstrapEngineSet
     _window_settings.callbacks.init();
 
     memset(_keycheck, _KeyCheck_None, sizeof(_keycheck));
+    memset(_mousecheck, _KeyCheck_None, sizeof(_mousecheck));
 }
 
 void bootstrap_run()
