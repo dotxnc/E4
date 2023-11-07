@@ -57,6 +57,14 @@ void e4gui_clean(GuiContainerT* container);
 void e4gui_update(GuiContainerT* container);
 void e4gui_draw(GuiContainerT* container);
 
+#define GUI_OBJECT(name, mem, nn, ...) \
+    typedef void(*name##CallbackPtr)(GuiObjectT* object); \
+    typedef struct Gui##name##StateT \
+    mem Gui##name##StateT; \
+    GuiObjectT* e4gui_##nn (__VA_ARGS__);
+
+GUI_OBJECT(Test, {char* a;}, test, char* a);
+
 // Gui object definitions
 typedef void (*ButtonCallbackPtr)(GuiObjectT* object);
 typedef struct GuiButtonStateT
@@ -81,4 +89,14 @@ typedef struct GuiDropMenuStateT
 } GuiDropMenuStateT;
 GuiObjectT* e4gui_dropmenu(char* label, DropMenuItemT* table, u32 table_count, u16 x, u16 y);
 
+typedef struct GuiTextboxStateT {
+    char* data;
+    u8 max_len;
+    u8 len;
+    bool use_cursor;
+    u8 cursor;
+} GuiTextboxStateT;
+GuiObjectT* e4gui_textbox(char* data, u8 max_len, u16 x, u16 y, u16 width);
+
 #endif
+

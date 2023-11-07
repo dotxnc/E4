@@ -1,8 +1,10 @@
 #include "e4gui.h"
+#include "bootstrap.h"
 #include "e4core.h"
 #include "e4draw.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // Useful macros
 #define MAKE_OBJECT(type)                              \
@@ -184,6 +186,81 @@ GuiObjectT* e4gui_dropmenu(char* label, DropMenuItemT* table, u32 table_count, u
     state->table = table;
     state->table_count = table_count;
     state->extended = false;
+
+    return object;
+}
+
+static f32 _blink = 0;
+
+static void _textbox_update(GuiObjectT* object)
+{
+    GET_STATE(Textbox);
+    u8 ch = bootstrap_get_char();
+    bool can_write = state->len < state->max_len-1;
+    bool is_empty = state->len == 0;
+    if (ch > 0 && can_write)
+    {
+        state->len++;
+        memcpy(state->data + (state->cursor + 1), state->data + state->cursor, state->max_len - state->cursor - 1);
+        state->data[state->cursor] = ch;
+        state->cursor++;
+        _blink = 0;
+    }
+    else if ((bootstrap_key_pressed(InputKey_Backspace) || bootstrap_key_repeat(InputKey_Backspace)) && !is_empty && state->cursor > 0)
+    {
+        memcpy(state->data + state->cursor-1, state->data + (state->cursor), state->max_len - state->cursor - 1);
+
+        state->cursor--;
+        state->len--;
+        _blink = 0;
+    }
+    else if ((bootstrap_key_pressed(InputKey_Left) ||  bootstrap_key_repeat(InputKey_Left)) && state->cursor > 0)
+    {
+        state->cursor--;
+        _blink = 0;
+    }
+
+    else if ((bootstrap_key_pressed(InputKey_Right) ||  bootstrap_key_repeat(InputKey_Right)) && state->cursor < state->len)
+    {
+        state->cursor++;
+        _blink = 0;
+    }
+
+    _blink += bootstrap_dtime();
+        
+}
+
+static void _textbox_draw(GuiObjectT* object)
+{
+    GET_STATE(Textbox);
+    e4core_push_mode();
+
+    e4draw_text(state->data, object->container->theme.text_text, object->x, object->y);
+    
+    if (fmod(_blink, 2.0) < 1)
+        e4core_putc(0xdd, object->container->theme.text_cursor, object->x + state->cursor, object->y);
+
+    e4core_pop_mode();
+}
+
+GuiObjectT* e4gui_textbox(char* data, u8 max_len, u16 x, u16 y, u16 width)
+{
+    MAKE_OBJECT(Textbox);
+    SET_CALLBACKS(textbox);
+
+    object->x = x;
+    object->y = y;
+    object->w = width;
+
+    state->data = data;
+    state->max_len = max_len;
+    state->len = 0;
+    state->use_cursor = true;
+    state->cursor = 0;
+
+    // data must be empty
+    // TODO: support default/ghost text
+    memset(data, 0, max_len);
 
     return object;
 }
