@@ -43,10 +43,12 @@ uint get_array(int x, int y)
 
 void main()
 {
+    // uniform vec2 res = vec2(640, 480);
+    vec2 r2 = buffer_size * char_size;
     
     // Position in "buffer-space" of the current character/tile
-    double x = (tex_coords.x * res.x)/int(char_size.x);
-    double y = (tex_coords.y * res.y)/int(char_size.y);
+    double x = (tex_coords.x * r2.x)/int(char_size.x);
+    double y = (tex_coords.y * r2.y)/int(char_size.y);
 
     vec2 ts = tex_size;
     vec2 ls = ts/char_size;
@@ -79,16 +81,5 @@ void main()
         color.rgb = palette[bg];
     }
     
-    // double lin_x = (fract(x)*2-1);
-    // double lin_y = (fract(y)*2-1);
-    
-    // color.rgb *= vec3((abs(lin_x)) * (abs(lin_y)));
-    // color.rgb *= 1-distance(vec2(lin_x, lin_y), vec2(0));
-    // double d = atan(float(lin_y) - sin(time)*0.25, float(lin_x) - cos(time)*0.25);
-    // double r = degrees(atan(float(lin_y+cos(time)*0.5), float(lin_x+cos(time)*0.5)));
-    // if ((r) > -135)
-        // color.rgb = vec3((r+180)/360, 0, 0);
-    // else
-    //     color.rgb = vec3(0, 0, 0);
     color.a = 1;
 }
