@@ -1,0 +1,13 @@
+# Zig build artifacts
+.zig-cache/
+zig-out/
+
+# CMake build directories
+build/
+cmake-build-*/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
