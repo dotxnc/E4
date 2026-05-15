@@ -68,7 +68,7 @@ fn onDraw(_dt: f32) void {
     const bg_color = @intFromEnum(Color.black);
     e4.core.clear(0x00, e4.core.makeColor(bg_color, bg_color));
 
-    const x_offset: f32 = @floatCast(15.0 + math.sin(e4.bootstrap.time() * 2.0) * 8.0);
+    const x_offset: f32 = 15.0 + @as(f32, @floatCast(math.sin(@as(f64, e4.bootstrap.time()) * 2.0))) * 8.0;
     e4.draw.text(
         "Hello, E4!",
         e4.core.makeColor(@intFromEnum(Color.black), @intFromEnum(Color.green)),

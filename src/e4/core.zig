@@ -292,11 +292,11 @@ pub fn render() void {
 }
 
 /// Set a scissor rectangle. Cells outside [x, x+w) × [y, y+h) will be ignored
-/// by subsequent putChar calls.
+/// by subsequent putChar calls.  Passing any zero dimension resets to full buffer.
 pub fn setScissor(x: u16, y: u16, w: u16, h: u16) void {
-    if (@as(u32, x) * y * w * h == 0) {
+    if (x == 0 or y == 0 or w == 0 or h == 0) {
         sci_x = 0;
-        sci_y = y;
+        sci_y = 0;
         sci_w = term_w;
         sci_h = term_h;
         return;

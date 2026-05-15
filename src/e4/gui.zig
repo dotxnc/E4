@@ -68,7 +68,7 @@ pub const GuiContainer = struct {
 
     pub fn addObject(self: *GuiContainer, object: *GuiObject) void {
         object.container = self;
-        self.objects.append(object) catch unreachable;
+        self.objects.append(object) catch @panic("E4 GUI: out of memory adding object");
     }
 
     pub fn clean(self: *GuiContainer, allocator: std.mem.Allocator) void {
